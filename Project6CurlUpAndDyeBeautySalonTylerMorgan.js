@@ -1,0 +1,211 @@
+
+/**
+ * @author Morgan, Tyler (morgant@student.ncmich.edu)
+ * @version 1
+ * @summary Tyler Morgan's Project 6 || created: 12.4.2017
+ */
+
+/** This is the pragma and library call section of the program*/
+"use strict";
+const PROMPT = require('readline-sync');
+const IO = require('fs');
+
+/** This is the global factor section of the program*/
+let continueResponse, decisionAnswer;
+let numCustomers, weeklyNumber, placementNumber;
+let customers = [], weeklyReport = [];
+const ADD_CUSTOMER = 0, CREATE_CUSTOMER = 1;
+let hairCut, manicure, massage, waxing;
+
+/** This section contains the dispatch method of the program*/
+function main () { //declares main as the dispatch method
+    loadPeople();
+    if (continueResponse == null) { //program begins here as continueResponse starts with a null value
+        setContinueResponse(); //runs continueResponse function
+    }
+    while (continueResponse ===1) {
+        setDecisionAnswer();
+        switch(decisionAnswer) {
+            case 1: setNumCustomers(); insertIntoArray(ADD_CUSTOMER); break;
+            case 2: setNumCustomers(); insertIntoArray(CREATE_CUSTOMER); writeWeeklyReport(); break;
+        }
+        setContinueResponse();
+    }
+    writeCustomers();
+}
+
+main();
+
+function setContinueResponse() {
+    if (continueResponse === 1) {
+        continueResponse = Number(PROMPT.question(`\nDo you want to continue? (1=yes, 0=no): `));
+        if (continueResponse !== 0 && continueResponse !== 1) {
+            console.log(`${continueResponse} is an incorrect value. Please try again.`);
+            continueResponse = 1;
+            setContinueResponse();
+        }
+    }
+    else {
+        continueResponse = 1;
+    }
+}
+
+function loadPeople() {
+    let fileInformation = IO.readFileSync(`data/customer_data.csv`, 'utf8');
+    let lines = fileInformation.toString().split(/\r?\n/);
+    for (let i = 0; i < lines.length; i++) {
+        customers.push(lines[i].toString().split(/,/));
+    }
+}
+
+function setDecisionAnswer() {
+    decisionAnswer = -1;
+    while (decisionAnswer !== 1 && decisionAnswer !== 2) {
+        decisionAnswer = Number(PROMPT.question(
+            `\tWould you like to edit an existing client or add a new one:
+             \t\t1) Add new customers
+             \t\t2) Create a weekly transaction file
+             \t\tCHOOSE: `
+             ));
+    }
+}
+
+function setNumCustomers() {
+    if (decisionAnswer ===1) {
+        const MIN_CUSTOMERS = 1, MAX_CUSTOMERS = 10;
+        while (!numCustomers || numCustomers < MIN_CUSTOMERS || numCustomers > MAX_CUSTOMERS) {
+            numCustomers = Number(PROMPT.question(`Please enter the number of new customers (maximum of 10): `));
+            if (isNaN(parseInt(numCustomers)) || numCustomers < MIN_CUSTOMERS || numCustomers > MAX_CUSTOMERS)
+                console.log(`${numCustomers} is an incorrect value. Please try again.`)
+        }
+    } else {
+        while (!weeklyNumber || isNaN(weeklyNumber)){
+            weeklyNumber = Number(PROMPT.question(`Please enter the number of services received this week (minimum of 1): `));
+            if (isNaN(parseInt(weeklyNumber)) || weeklyNumber < 1 )
+                console.log(`${weeklyNumber} is an incorrect value. Please try again.`)
+        }
+    }
+}
+function insertIntoArray(ADD_CREATE) {
+    let newCustomer = 0;
+    let counter = 1;
+    if (ADD_CREATE === ADD_CUSTOMER) {
+        while (numCustomers > 0) {
+            const MIN_PAYMENT = 0;
+            // let newCustomer = customers.length;
+            customers[newCustomer] = [];
+            console.log(`Customer ${counter}:`);
+            customers[newCustomer][0] = Number(customers.length);
+            while (!customers[newCustomer][1] || !/^[a-zA-Z -]{1,30}$/.test(customers[newCustomer][1])) {
+                customers[newCustomer][1] = PROMPT.question(`Please enter the customers first name: `);
+                if (!/^[a-zA-Z -]{1,30}$/.test(customers[newCustomer][1])) {
+                    console.log(`${customers[newCustomer][1]} is invalid. Please try again.`);
+                }
+            }
+            while (!customers[newCustomer][2] || !/^[a-zA-Z -]{1,30}$/.test(customers[newCustomer][2])) {
+                customers[newCustomer][2] = PROMPT.question(`Please enter the customers last name: `);
+                if (!/^[a-zA-Z -]{1,30}$/.test(customers[newCustomer][2])) {
+                    console.log(`${customers[newCustomer][2]} is invalid. Please try again.`);
+                }
+            }
+            while (!customers[newCustomer][3] || isNaN(customers[newCustomer][3]) || customers[newCustomer][3] < MIN_PAYMENT) {
+                customers[newCustomer][3] = Number(PROMPT.question(`Please enter how much the customer spent (in dollars) on their first payment: `));
+                if (!customers[newCustomer][3] || isNaN(customers[newCustomer][3]) || customers[newCustomer][3] < MIN_PAYMENT) {
+                    console.log(`${customers[newCustomer][3]} is invalid. Please try again.`)
+                }
+            }
+            newCustomer++;
+            numCustomers--;
+                counter++;
+        }
+        console.log(`You added ${counter - 1} customers to the file.`);
+        console.log(customers);
+
+    } else {
+        listCustomers();
+        while (weeklyNumber > 0) {
+            console.log(`Customer ${counter}:`);
+            weeklyReport[newCustomer] = [];
+            while (!weeklyReport[newCustomer][0] || weeklyReport[newCustomer][0] < 1 || weeklyReport[newCustomer][0] > customers.length  || isNaN(weeklyReport[newCustomer][0])) {
+                weeklyReport[newCustomer][0] = Number(PROMPT.question(`Please enter the id number of the customer: `));
+                if (!weeklyReport[newCustomer][0] || weeklyReport[newCustomer][0] < 1 || weeklyReport[newCustomer][0] > customers.length||isNaN(weeklyReport[newCustomer][0])) {
+                    console.log(`That answer is invalid. Please try again.`);
+                }
+            }
+            placementNumber = Number(weeklyReport[newCustomer][0]) - 1;
+            weeklyReport[newCustomer][1] = PROMPT.question(`Please enter the name of the service the customer bought: `);
+            while (!weeklyReport[newCustomer][2] || isNaN(weeklyReport[newCustomer][2]) || weeklyReport[newCustomer][2] < 0) {
+                weeklyReport[newCustomer][2] = Number(PROMPT.question(`Please enter how much the customer paid for the service: `));
+                if (!weeklyReport[newCustomer][2] || isNaN(weeklyReport[newCustomer][2]) || weeklyReport[newCustomer][2] < 0) {
+                    console.log(`That answer is invalid. Please try again.`);
+                }
+            }
+            customers[placementNumber][3] = Number(customers[placementNumber][3]) + Number(weeklyReport[newCustomer][2]);
+            if (Number(customers[placementNumber][3]) > 750) {
+                printCoupon();
+            }
+            counter++;
+            weeklyNumber--;
+            newCustomer++;
+            listCustomers();
+        }
+    }
+}
+
+function listCustomers() {
+    const COLUMNS = 4;
+    console.log(` ID  FIRST  LAST  TOTALSPENT\n====================================`);
+    for (let i = 0; i < customers.length; i++) {
+        // console.log(`${i}  `);
+        for (let j = 0; j < COLUMNS; j++) {
+            if (j < COLUMNS - 1) {
+                process.stdout.write(`${customers[i][j]},  `);
+            } else {
+                process.stdout.write(`${customers[i][j]}\n`);
+            }
+        }
+    }
+}
+
+function printCoupon() {
+    console.log(`Congratuations to ${customers[placementNumber][1]} ${customers[placementNumber][2]} for winning a free haircut!`);
+}
+
+function writeCustomers() {
+    const COLUMNS = 4;
+    for (let i = 0; i < customers.length; i++){
+        if (customers[i]){
+            for (let j = 0; j < COLUMNS; j++){
+                if (j < COLUMNS - 1) {
+                    IO.appendFileSync(`data/dataX.csv`, `${customers[i][j]},`);
+                } else if(i < customers.length - 1){
+                    IO.appendFileSync(`data/dataX.csv`, `${customers[i][j]}\n`);
+                } else {
+                    IO.appendFileSync(`data/dataX.csv`, `${customers[i][j]}`);
+                }
+            }
+        }
+    }
+    IO.unlinkSync(`data/customer_data.csv`);
+    IO.renameSync(`data/dataX.csv`, `data/customer_data.csv`);
+}
+
+function writeWeeklyReport() {
+    const COLUMNS = 3;
+    for (let i = 0; i < weeklyReport.length; i++){
+        if (weeklyReport[i]){
+            for (let j = 0; j < COLUMNS; j++){
+                if (j < COLUMNS - 1) {
+                    IO.appendFileSync(`data/dataY.csv`, `${weeklyReport[i][j]},`);
+                } else if(i < customers.length - 1){
+                    IO.appendFileSync(`data/dataY.csv`, `${weeklyReport[i][j]}\n`);
+                } else {
+                    IO.appendFileSync(`data/dataY.csv`, `${weeklyReport[i][j]}`);
+                }
+            }
+        }
+    }
+    IO.renameSync(`data/dataY.csv`, `data/weekly_report.csv`);
+    //Note: unlink not used so that the weekly report acts as a weekly report, and not a running talley
+}
+
